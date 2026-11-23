@@ -2756,7 +2756,7 @@ API.init = function (canvas, opts) {
           ctx.letterSpacing='14px';
 
         ctx.fillText(
-          'ALTITUDE',
+          'BOEING',
           w/2,
           h/2+6
         );
@@ -2999,39 +2999,53 @@ API.init = function (canvas, opts) {
 
     /* ALTITUDE wordmark */
 
-    const fuselageLogo =
-      canvasTex(
-        900,
-        180,
-        (ctx,w,h)=>{
+   const fuselageLogo =
+  canvasTex(
+    900,
+    180,
+    (ctx, w, h) => {
 
-          ctx.clearRect(
-            0,
-            0,
-            w,
-            h
-          );
+      ctx.clearRect(0, 0, w, h);
 
-          ctx.fillStyle =
-            '#005b9a';
+      const text = 'GROUND SUPPORT';
 
-          ctx.font =
-            '800 118px Arial, sans-serif';
+      ctx.fillStyle = '#005b9a';
 
-          ctx.textAlign =
-            'center';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
-          ctx.textBaseline =
-            'middle';
+      // Maximum and minimum font sizes
+      const maxFontSize = 118;
+      const minFontSize = 35;
 
-          ctx.fillText(
-            'ALTITUDE',
-            w/2,
-            h/2+4
-          );
+      let fontSize = maxFontSize;
+
+      // Leave some padding on both sides
+      const maxWidth = w * 0.92;
+
+      // Automatically shrink the text until it fits
+      while (fontSize > minFontSize) {
+
+        ctx.font =
+          `800 ${fontSize}px Arial, sans-serif`;
+
+        if (ctx.measureText(text).width <= maxWidth) {
+          break;
         }
-      );
 
+        fontSize -= 2;
+      }
+
+      ctx.font =
+        `800 ${fontSize}px Arial, sans-serif`;
+
+      ctx.fillText(
+        text,
+        w / 2,
+        h / 2 + 4
+      );
+    }
+  );
     [-1,1].forEach(s=>{
 
       const logo =
