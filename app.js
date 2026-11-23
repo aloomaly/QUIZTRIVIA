@@ -9,16 +9,8 @@ const TOPIC = "Boeing & Aviation";
 /* ───────── Supabase ───────── */
 
 const SUPABASE_URL = "https://jytbghbntcbjajyojygq.supabase.co";
-
-/*
- * Paste your Supabase PUBLISHABLE key here.
- *
- * IMPORTANT:
- * Use the sb_publishable_... key only.
- * NEVER use a sb_secret_... or service_role key here.
- */
+/* Publishable key only (sb_publishable_...). Never a secret/service_role key. */
 const SUPABASE_KEY = "sb_publishable_JPHqLD7T7uR3lzJWlR1CBQ_RmBxufZ_";
-
 
 /* ───────── question pool ───────── */
 
@@ -43,7 +35,6 @@ const POOL = [
   ["In which city was Boeing founded in 1916?", ["Miami", "Dallas", "Denver", "Seattle"], 3]
 ];
 
-
 /* ───────── state ───────── */
 
 const state = {
@@ -62,12 +53,10 @@ const player = {
 let leaderboardEntries = [];
 let timerId = null;
 
-
 /* ───────── helpers ───────── */
 
 const $ = s => document.querySelector(s);
 const screens = [...document.querySelectorAll(".screen")];
-
 
 /* ───────── screen navigation ───────── */
 
@@ -78,62 +67,46 @@ function show(name) {
     s.classList.toggle("active", s.id === name);
   });
 
-  if (window.SkyScene) {
+  /* guarded: SkyScene.setMode only exists if WebGL/Three.js started */
+  if (window.SkyScene && SkyScene.setMode) {
     SkyScene.setMode(name === "quiz" ? "quiz" : "hero");
   }
 }
 
-
 document.querySelectorAll("[data-screen]").forEach(b => {
   b.addEventListener("click", () => {
     const screen = b.dataset.screen;
-
     show(screen);
-
-    if (screen === "leaderboard") {
-      loadLeaderboard();
-    }
+    if (screen === "leaderboard") loadLeaderboard();
   });
 });
-
 
 /* ───────── shuffle ───────── */
 
 function shuffle(a) {
   const r = [...a];
-
   for (let i = r.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [r[i], r[j]] = [r[j], r[i]];
   }
-
   return r;
 }
-
 
 /* ───────── toast ───────── */
 
 function toast(msg) {
   const t = $("#toast");
-
   if (!t) return;
-
   t.textContent = msg;
   t.classList.add("show");
-
-  setTimeout(() => {
-    t.classList.remove("show");
-  }, 1700);
+  setTimeout(() => t.classList.remove("show"), 1700);
 }
-
 
 /* ───────── player name ───────── */
 
 function getPlayerName() {
   const previousName =
-    player.name ||
-    localStorage.getItem("altitudePlayerName") ||
-    "";
+    player.name || localStorage.getItem("altitudePlayerName") || "";
 
   const input = window.prompt(
     previousName
@@ -141,9 +114,7 @@ function getPlayerName() {
       : "ENTER YOUR PILOT NAME:"
   );
 
-  if (input === null) {
-    return null;
-  }
+  if (input === null) return null;
 
   const name = input.trim().replace(/\s+/g, " ");
 
@@ -158,24 +129,15 @@ function getPlayerName() {
   }
 
   player.name = name;
-
-  localStorage.setItem(
-    "altitudePlayerName",
-    name
-  );
-
+  localStorage.setItem("altitudePlayerName", name);
   return name;
 }
-
 
 /* ───────── Supabase: submit score ───────── */
 
 async function submitScore() {
   const name = player.name || "Anonymous Pilot";
-
-  const correctAnswers = Math.round(
-    state.score / XP_PER_CORRECT
-  );
+  const correctAnswers = Math.round(state.score / XP_PER_CORRECT);
 
   const payload = {
     player_name: name,
@@ -186,53 +148,32 @@ async function submitScore() {
   };
 
   try {
-    const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/leaderboard`,
-      {
-        method: "POST",
-
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          "Prefer": "return=minimal"
-        },
-
-        body: JSON.stringify(payload)
-      }
-    );
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(payload)
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-
-      console.error(
-        "[ALTITUDE] Supabase score submission failed:",
-        errorText
-      );
-
+      console.error("[ALTITUDE] Supabase score submission failed:", errorText);
       toast("Score could not be submitted.");
-
       return false;
     }
 
-    console.log(
-      "[ALTITUDE] Score submitted successfully."
-    );
-
+    console.log("[ALTITUDE] Score submitted successfully.");
     return true;
-
   } catch (error) {
-    console.error(
-      "[ALTITUDE] Supabase connection error:",
-      error
-    );
-
+    console.error("[ALTITUDE] Supabase connection error:", error);
     toast("Leaderboard connection unavailable.");
-
     return false;
   }
 }
-
 
 /* ───────── Supabase: load leaderboard ───────── */
 
@@ -240,18 +181,11 @@ async function loadLeaderboard() {
   const list = $("#leaderboardList");
 
   if (!list) {
-    console.warn(
-      "[ALTITUDE] #leaderboardList was not found."
-    );
-
+    console.warn("[ALTITUDE] #leaderboardList was not found.");
     return;
   }
 
-  list.innerHTML = `
-    <div class="leaderboard-loading">
-      LOADING GLOBAL CABIN...
-    </div>
-  `;
+  list.innerHTML = `<div class="leaderboard-loading">LOADING GLOBAL CABIN...</div>`;
 
   try {
     const response = await fetch(
@@ -261,7 +195,6 @@ async function loadLeaderboard() {
       `&limit=50`,
       {
         method: "GET",
-
         headers: {
           "apikey": SUPABASE_KEY,
           "Authorization": `Bearer ${SUPABASE_KEY}`
@@ -269,47 +202,26 @@ async function loadLeaderboard() {
       }
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-
-      throw new Error(errorText);
-    }
+    if (!response.ok) throw new Error(await response.text());
 
     leaderboardEntries = await response.json();
-
     renderLeaderboard();
-
   } catch (error) {
-    console.error(
-      "[ALTITUDE] Could not load leaderboard:",
-      error
-    );
-
-    list.innerHTML = `
-      <div class="leaderboard-loading">
-        UNABLE TO LOAD GLOBAL CABIN
-      </div>
-    `;
+    console.error("[ALTITUDE] Could not load leaderboard:", error);
+    list.innerHTML = `<div class="leaderboard-loading">UNABLE TO LOAD GLOBAL CABIN</div>`;
   }
 }
-
 
 /* ───────── leaderboard rendering ───────── */
 
 function renderLeaderboard() {
   const list = $("#leaderboardList");
-
   if (!list) return;
 
   list.innerHTML = "";
 
   if (!leaderboardEntries.length) {
-    list.innerHTML = `
-      <div class="leaderboard-loading">
-        NO FLIGHTS RECORDED YET
-      </div>
-    `;
-
+    list.innerHTML = `<div class="leaderboard-loading">NO FLIGHTS RECORDED YET</div>`;
     return;
   }
 
@@ -318,8 +230,7 @@ function renderLeaderboard() {
 
     const isYou =
       player.name &&
-      entry.player_name.toLowerCase() ===
-      player.name.toLowerCase();
+      entry.player_name.toLowerCase() === player.name.toLowerCase();
 
     row.className = isYou ? "you" : "";
 
@@ -333,17 +244,13 @@ function renderLeaderboard() {
   });
 }
 
-
 /* ───────── prevent HTML injection ───────── */
 
 function escapeHTML(value) {
   const div = document.createElement("div");
-
   div.textContent = value;
-
   return div.innerHTML;
 }
-
 
 /* ───────── timer ───────── */
 
@@ -354,89 +261,52 @@ function stopTimer() {
   }
 }
 
-
 function startTimer(run) {
   stopTimer();
 
-  const deadline =
-    Date.now() + TIME_LIMIT * 1000;
-
+  const deadline = Date.now() + TIME_LIMIT * 1000;
   const bar = $("#timerBar");
   const label = $("#timer");
 
   const paint = () => {
-    const left = Math.max(
-      0,
-      deadline - Date.now()
-    );
-
-    const secs = Math.ceil(
-      left / 1000
-    );
+    const left = Math.max(0, deadline - Date.now());
+    const secs = Math.ceil(left / 1000);
+    const urgent = secs <= 10;
 
     if (label) {
       label.textContent = `⏱ ${secs}s`;
+      label.style.color = urgent ? "#dc8d8d" : "";
     }
 
     if (bar) {
-      bar.style.transform =
-        `scaleX(${left / (TIME_LIMIT * 1000)})`;
-
-      const urgent = secs <= 10;
-
-      bar.style.background =
-        urgent ? "#dc8d8d" : "#e2b26a";
+      bar.style.transform = `scaleX(${left / (TIME_LIMIT * 1000)})`;
+      bar.style.background = urgent ? "#dc8d8d" : "#e2b26a";
     }
 
-    if (label) {
-      const urgent = secs <= 10;
-
-      label.style.color =
-        urgent ? "#dc8d8d" : "";
-    }
-
-    if (
-      left <= 0 &&
-      run === state.run
-    ) {
+    if (left <= 0 && run === state.run) {
       stopTimer();
       timeUp();
     }
   };
 
   paint();
-
-  timerId = setInterval(
-    paint,
-    200
-  );
+  timerId = setInterval(paint, 200);
 }
-
 
 /* ───────── quiz flow ───────── */
 
 function startQuiz() {
   const name = getPlayerName();
-
-  if (!name) {
-    return;
-  }
+  if (!name) return;
 
   state.run++;
 
   state.questions = shuffle(POOL)
     .slice(0, QUESTION_COUNT)
     .map(([q, opts, correct]) => {
-
       const answer = opts[correct];
-
       const options = shuffle(opts);
-
-      return {
-        q,
-        options,
-        correct: options.indexOf(answer)
-      };
+      return { q, options, correct: options.indexOf(answer) };
     });
 
   state.index = 0;
@@ -444,175 +314,105 @@ function startQuiz() {
   state.answered = false;
 
   show("quiz");
-
   renderQuestion();
 }
 
-
 function renderQuestion() {
   const q = state.questions[state.index];
-
   const n = state.questions.length;
 
-  $("#questionNumber").textContent =
-    String(state.index + 1).padStart(2, "0");
-
+  $("#questionNumber").textContent = String(state.index + 1).padStart(2, "0");
   $("#progressText").textContent =
     `${String(state.index + 1).padStart(2, "0")} / ${String(n).padStart(2, "0")}`;
-
-  $("#progressBar").style.transform =
-    `scaleX(${state.index / n})`;
-
-  $("#questionCategory").textContent =
-    TOPIC.toUpperCase();
-
-  $("#question").textContent =
-    q.q;
-
+  $("#progressBar").style.transform = `scaleX(${state.index / n})`;
+  $("#questionCategory").textContent = TOPIC.toUpperCase();
+  $("#question").textContent = q.q;
   $("#feedback").textContent = "";
-
-  $("#quizXp").textContent =
-    `${state.score} XP`;
+  $("#quizXp").textContent = `${state.score} XP`;
 
   const answers = $("#answers");
-
   answers.innerHTML = "";
 
   q.options.forEach((a, i) => {
-
-    const b =
-      document.createElement("button");
-
+    const b = document.createElement("button");
     b.className = "answer";
-
-    b.textContent =
-      `${String.fromCharCode(65 + i)}  ${a}`;
-
-    b.onclick = () =>
-      answer(i, b);
-
+    b.textContent = `${String.fromCharCode(65 + i)}  ${a}`;
+    b.onclick = () => answer(i, b);
     answers.appendChild(b);
   });
 
   startTimer(state.run);
 }
 
-
 function next(run) {
-  if (run !== state.run) {
-    return;
-  }
+  if (run !== state.run) return;
 
   state.index++;
 
-  if (
-    state.index >=
-    state.questions.length
-  ) {
+  if (state.index >= state.questions.length) {
     finishQuiz();
   } else {
     state.answered = false;
-
     renderQuestion();
   }
 }
 
-
 function lockAnswers(q) {
-  [...$("#answers").children]
-    .forEach((b, n) => {
-
-      b.disabled = true;
-
-      if (n === q.correct) {
-        b.classList.add("correct");
-      }
-    });
+  [...$("#answers").children].forEach((b, n) => {
+    b.disabled = true;
+    if (n === q.correct) b.classList.add("correct");
+  });
 
   $("#progressBar").style.transform =
     `scaleX(${(state.index + 1) / state.questions.length})`;
 }
 
-
 /* ───────── answer ───────── */
 
 function answer(i, clicked) {
-  if (state.answered) {
-    return;
-  }
+  if (state.answered) return;
 
   state.answered = true;
-
   stopTimer();
 
-  const q =
-    state.questions[state.index];
-
+  const q = state.questions[state.index];
   const run = state.run;
 
   lockAnswers(q);
 
   if (i === q.correct) {
-
     state.score += XP_PER_CORRECT;
-
     clicked.classList.add("correct");
-
-    $("#feedback").textContent =
-      `CORRECT · +${XP_PER_CORRECT} XP`;
-
-    $("#feedback").style.color =
-      "#8bd3a8";
-
+    $("#feedback").textContent = `CORRECT · +${XP_PER_CORRECT} XP`;
+    $("#feedback").style.color = "#8bd3a8";
   } else {
-
     clicked.classList.add("wrong");
-
-    $("#feedback").textContent =
-      `INCORRECT · CORRECT ANSWER: ${q.options[q.correct]}`;
-
-    $("#feedback").style.color =
-      "#dc8d8d";
+    $("#feedback").textContent = `INCORRECT · CORRECT ANSWER: ${q.options[q.correct]}`;
+    $("#feedback").style.color = "#dc8d8d";
   }
 
-  $("#quizXp").textContent =
-    `${state.score} XP`;
+  $("#quizXp").textContent = `${state.score} XP`;
 
-  setTimeout(
-    () => next(run),
-    700
-  );
+  setTimeout(() => next(run), 700);
 }
-
 
 /* ───────── time up ───────── */
 
 function timeUp() {
-  if (state.answered) {
-    return;
-  }
+  if (state.answered) return;
 
   state.answered = true;
 
-  const q =
-    state.questions[state.index];
-
+  const q = state.questions[state.index];
   const run = state.run;
 
   lockAnswers(q);
 
-  $("#feedback").textContent =
-    `TIME'S UP · CORRECT ANSWER: ${q.options[q.correct]}`;
+  $("#feedback").textContent = `TIME'S UP · CORRECT ANSWER: ${q.options[q.correct]}`;
+  $("#feedback").style.color = "#dc8d8d";
 
-  $("#feedback").style.color =
-    "#dc8d8d";
-
-  setTimeout(
-    () => next(run),
-    1100
-  );
+  setTimeout(() => next(run), 1100);
 }
-
 
 /* ───────── finish quiz ───────── */
 
@@ -621,26 +421,13 @@ async function finishQuiz() {
 
   state.totalXP += state.score;
 
-  const n =
-    state.questions.length;
+  const n = state.questions.length;
+  const correct = Math.round(state.score / XP_PER_CORRECT);
+  const pct = Math.round(state.score / (n * XP_PER_CORRECT) * 100);
 
-  const correct =
-    Math.round(state.score / XP_PER_CORRECT);
-
-  const pct =
-    Math.round(
-      state.score /
-      (n * XP_PER_CORRECT) *
-      100
-    );
-
-  // Update the results screen first.
-  // Supabase must never prevent the results from appearing.
-  $("#finalScore").textContent =
-    state.score;
-
-  $("#scoreNav").textContent =
-    `${state.totalXP} XP`;
+  /* Update results first: Supabase must never block them. */
+  $("#finalScore").textContent = state.score;
+  $("#scoreNav").textContent = `${state.totalXP} XP`;
 
   $("#resultTitle").textContent =
     pct >= 80
@@ -652,74 +439,48 @@ async function finishQuiz() {
   $("#resultText").textContent =
     `${player.name}, you got ${correct} of ${n} right on the ${TOPIC} flight.`;
 
-  // Show the results immediately.
   show("results");
 
-  // Submit the score after the results are visible.
-  // A Supabase failure must not break the quiz.
   try {
     const submitted = await submitScore();
-
     if (!submitted) {
-      console.warn(
-        "[ALTITUDE] Results displayed, but the score was not submitted."
-      );
+      console.warn("[ALTITUDE] Results displayed, but the score was not submitted.");
     }
   } catch (error) {
-    console.error(
-      "[ALTITUDE] Score submission failed:",
-      error
-    );
-
+    console.error("[ALTITUDE] Score submission failed:", error);
     toast("Results saved · leaderboard unavailable");
   }
 }
 
-
 /* ───────── buttons ───────── */
 
-$("#startBtn").onclick =
-  startQuiz;
-
-$("#retryBtn").onclick =
-  startQuiz;
+$("#startBtn").onclick = startQuiz;
+$("#retryBtn").onclick = startQuiz;
 
 $("#quitQuiz").onclick = () => {
-
   state.run++;
-
   show("home");
 };
 
+/* ───────── Three.js scene (optional: the quiz works without it) ───────── */
 
-/* ───────── Three.js scene ───────── */
-
-SkyScene.init(
+const sceneOK = window.SkyScene && SkyScene.init(
   document.querySelector("#gl"),
   {
     reduced: false,
 
     onTelemetry(s) {
+      $("#speed").textContent = Math.round(s.kts);
+      $("#alt").textContent = Math.round(s.altFt);
 
-      $("#speed").textContent =
-        Math.round(s.kts);
-
-      $("#alt").textContent =
-        Math.round(s.altFt);
-
-      const t =
-        Math.floor(s.T);
-
+      const t = Math.floor(s.T);
       $("#clock").textContent =
         `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
     }
   }
 );
 
-SkyScene.start();
-
-SkyScene.onIntroEnd(() =>
-  toast(
-    "Takeoff complete · ready when you are"
-  )
-);
+if (sceneOK) {
+  SkyScene.start();
+  SkyScene.onIntroEnd(() => toast("Takeoff complete · ready when you are"));
+}
