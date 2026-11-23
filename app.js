@@ -1,147 +1,725 @@
-const categories = [
-  {id:"science",icon:"◉",name:"Science",desc:"Space, physics, biology & the strange stuff between.",questions:[
-    ["What is the closest star to Earth after the Sun?",["Sirius","Proxima Centauri","Betelgeuse","Vega"],1],
-    ["What particle has a negative electric charge?",["Proton","Neutron","Electron","Photon"],2],
-    ["Which planet has the most prominent ring system?",["Mars","Saturn","Venus","Mercury"],1],
-    ["What gas do plants absorb during photosynthesis?",["Oxygen","Nitrogen","Carbon dioxide","Hydrogen"],2]
-  ]},
-  {id:"history",icon:"⌘",name:"History",desc:"Empires, inventions, revolutions & turning points.",questions:[
-    ["Which ancient civilization built Machu Picchu?",["Roman","Inca","Maya","Egyptian"],1],
-    ["The printing press is strongly associated with whom?",["Newton","Gutenberg","Galileo","Da Vinci"],1],
-    ["The Berlin Wall fell in which year?",["1979","1985","1989","1994"],2],
-    ["Who was the first person to walk on the Moon?",["Buzz Aldrin","Yuri Gagarin","Neil Armstrong","John Glenn"],2]
-  ]},
-  {id:"tech",icon:"⌁",name:"Technology",desc:"Computing, internet, AI and the machines shaping tomorrow.",questions:[
-    ["What does CPU stand for?",["Central Processing Unit","Computer Power Utility","Core Program User","Central Protocol Unit"],0],
-    ["Which language runs natively in web browsers?",["Python","JavaScript","C","Rust"],1],
-    ["What does HTTP stand for?",["HyperText Transfer Protocol","High Transfer Text Process","Hyperlink Terminal Transfer Path","Host Text Transport Protocol"],0],
-    ["Which data structure follows FIFO?",["Stack","Tree","Queue","Graph"],2]
-  ]},
-  {id:"space",icon:"✦",name:"Space",desc:"Planets, stars, missions and the edge of the known.",questions:[
-    ["Which planet is known as the Red Planet?",["Jupiter","Mars","Neptune","Uranus"],1],
-    ["What is the name of our galaxy?",["Andromeda","Sombrero","Milky Way","Whirlpool"],2],
-    ["What is a light-year a measure of?",["Time","Brightness","Distance","Mass"],2],
-    ["Which object is at the center of our solar system?",["Earth","The Sun","Jupiter","Polaris"],1]
-  ]},
-  {id:"geography",icon:"◇",name:"Geography",desc:"Cities, countries, oceans, mountains and the planet below.",questions:[
-    ["Which is the largest ocean?",["Atlantic","Indian","Pacific","Arctic"],2],
-    ["What is the capital of Japan?",["Kyoto","Osaka","Tokyo","Sapporo"],2],
-    ["Which country has the most natural lakes?",["Canada","Brazil","Russia","India"],0],
-    ["The Sahara is primarily located on which continent?",["Asia","Africa","Australia","Europe"],1]
-  ]},
-  {id:"culture",icon:"✧",name:"Culture",desc:"Art, music, film, literature and ideas that travel.",questions:[
-    ["Who painted the Mona Lisa?",["Michelangelo","Leonardo da Vinci","Raphael","Van Gogh"],1],
-    ["Which instrument has 88 keys in its standard form?",["Violin","Piano","Flute","Harp"],1],
-    ["Which genre is associated with Miles Davis?",["Jazz","Reggae","Opera","Punk"],0],
-    ["Who wrote Romeo and Juliet?",["Shakespeare","Dante","Homer","Goethe"],0]
-  ]},
-  {id:"nature",icon:"❋",name:"Nature",desc:"Animals, ecosystems, oceans and the living world.",questions:[
-    ["What is the largest land animal?",["Giraffe","Elephant","Rhino","Hippo"],1],
-    ["How many legs does a spider have?",["6","8","10","12"],1],
-    ["Which animal is known for changing its skin color?",["Penguin","Chameleon","Elephant","Otter"],1],
-    ["What process turns liquid water into vapor?",["Condensation","Freezing","Evaporation","Melting"],2]
-  ]},
-  {id:"sports",icon:"△",name:"Sports",desc:"Records, rules, legendary players and big moments.",questions:[
-    ["How many players are on a football/soccer team on the pitch?",["9","10","11","12"],2],
-    ["Which sport uses a shuttlecock?",["Tennis","Badminton","Squash","Hockey"],1],
-    ["How many rings are on the Olympic symbol?",["4","5","6","7"],1],
-    ["In which sport is the term 'birdie' commonly used?",["Golf","Boxing","Swimming","Rugby"],0]
-  ]},
-  {id:"india",icon:"☼",name:"India",desc:"History, science, culture, geography and modern India.",questions:[
-    ["What is the capital of Karnataka?",["Mysuru","Bengaluru","Mangaluru","Hubballi"],1],
-    ["Which Indian mission achieved a soft landing near the Moon's south polar region in 2023?",["Chandrayaan-1","Mangalyaan","Chandrayaan-3","Aditya-L1"],2],
-    ["What is India's national animal?",["Lion","Tiger","Elephant","Peacock"],1],
-    ["Which city is known as the Pink City?",["Jaipur","Udaipur","Jodhpur","Bhopal"],0]
-  ]},
-  {id:"random",icon:"?",name:"Wildcard",desc:"A chaotic mix for pilots who refuse to choose.",questions:[]}
+/* ALTITUDE — Boeing & Aviation trivia: 5 questions per flight, 30 seconds each. */
+/* Supabase global leaderboard + GitHub Pages compatible */
+
+const QUESTION_COUNT = 5;
+const TIME_LIMIT = 30;
+const XP_PER_CORRECT = 250;
+const TOPIC = "Boeing & Aviation";
+
+/* ───────── Supabase ───────── */
+
+const SUPABASE_URL = "https://jytbghbntcbjajyojygq.supabase.co";
+
+/*
+ * Paste your Supabase PUBLISHABLE key here.
+ *
+ * IMPORTANT:
+ * Use the sb_publishable_... key only.
+ * NEVER use a sb_secret_... or service_role key here.
+ */
+const SUPABASE_KEY = "sb_publishable_JPHqLD7T7uR3lzJWlR1CBQ_RmBxufZ_";
+
+
+/* ───────── question pool ───────── */
+
+/* [question, [options], index of the correct option] */
+const POOL = [
+  ["Which company built the famous 747 'Jumbo Jet'?", ["Airbus", "Boeing", "Embraer", "Bombardier"], 1],
+  ["What is the Boeing 747's famous nickname?", ["Queen of the Skies", "Duke of the Clouds", "Prince of Planes", "Baron of the Boarding Gate"], 0],
+  ["What colour are the flight recorders, the so-called 'black boxes'?", ["Black, obviously", "Bright orange", "Hot pink", "Neon green"], 1],
+  ["What is the Boeing 787's nickname?", ["Nightmareliner", "Daydreamer", "Dreamliner", "Sleepliner"], 2],
+  ["A pilot shouts 'Mayday!' on the radio. What does that mean?", ["Party at 30,000 ft", "Snacks requested", "Time to turn left", "Distress: I need help now"], 3],
+  ["Planes usually take off and land facing which way?", ["Into the wind", "Toward the terminal", "Away from the sun", "Whichever way the pilot likes"], 0],
+  ["How many engines does a Boeing 747 have?", ["2", "3", "4", "6"], 2],
+  ["In which decade did the Boeing 747 first fly?", ["1950s", "1960s", "1980s", "1990s"], 1],
+  ["Runway '09' points roughly in which compass direction?", ["North", "East", "South", "West"], 1],
+  ["Which tail control swings the nose left and right?", ["Rudder", "Elevator", "Spoiler", "Cup holder"], 0],
+  ["Roughly how high does a passenger jet cruise?", ["3,500 ft", "35,000 ft", "350,000 ft", "Wherever the pilot feels like"], 1],
+  ["Who made the first powered, controlled aeroplane flight in 1903?", ["The Wright brothers", "The Boeing brothers", "The Lumière brothers", "The Mario brothers"], 0],
+  ["What does ATC stand for in aviation?", ["Always Taking Coffee", "Air Traffic Control", "Aircraft Touch Centre", "Altitude Test Chamber"], 1],
+  ["Which Boeing is the best-selling jet airliner family of all time?", ["737", "747", "777", "787"], 0],
+  ["In the pilots' phonetic alphabet, which word stands for the letter Z?", ["Zebra", "Zero", "Zulu", "Zed"], 2],
+  ["A pilot says 'Roger'. What does it mean?", ["Hello, I'm Roger", "Message received", "Turn right", "Out of coffee"], 1],
+  ["In which city was Boeing founded in 1916?", ["Miami", "Dallas", "Denver", "Seattle"], 3]
 ];
 
-const allQuestions = categories.filter(c=>c.id!=="random").flatMap(c=>c.questions.map(q=>[...q,c.name]));
-const state={category:null,questions:[],index:0,score:0,totalXP:0,answered:false};
 
-const $=s=>document.querySelector(s);
-const screens=[...document.querySelectorAll(".screen")];
-function show(name){
-  screens.forEach(s=>s.classList.toggle("active",s.id===name));
-  if(window.SkyScene) SkyScene.setMode(name==="quiz"?"quiz":"hero");
-}
-document.querySelectorAll("[data-screen]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.screen)));
+/* ───────── state ───────── */
 
-function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
-function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1700)}
+const state = {
+  questions: [],
+  index: 0,
+  score: 0,
+  totalXP: 0,
+  answered: false,
+  run: 0
+};
 
-function renderCategories(){
-  const grid=$("#categoryGrid");
-  grid.innerHTML="";
-  categories.forEach(c=>{
-    const count=c.id==="random"?allQuestions.length:c.questions.length;
-    const el=document.createElement("button");
-    el.className="category";
-    el.innerHTML=`<span class="icon">${c.icon}</span><div><h3>${c.name}</h3><p>${c.desc}</p></div><span class="count">${count} QUESTIONS · BOARD →</span>`;
-    el.onclick=()=>startQuiz(c.id);
-    grid.appendChild(el);
+const player = {
+  name: localStorage.getItem("altitudePlayerName") || ""
+};
+
+let leaderboardEntries = [];
+let timerId = null;
+
+
+/* ───────── helpers ───────── */
+
+const $ = s => document.querySelector(s);
+const screens = [...document.querySelectorAll(".screen")];
+
+
+/* ───────── screen navigation ───────── */
+
+function show(name) {
+  if (name !== "quiz") stopTimer();
+
+  screens.forEach(s => {
+    s.classList.toggle("active", s.id === name);
   });
-}
-function startQuiz(id){
-  const c=categories.find(x=>x.id===id);
-  state.category=c;
-  state.questions=shuffle(c.id==="random"?allQuestions.map(q=>q):c.questions).slice(0,Math.min(10,c.id==="random"?allQuestions.length:c.questions.length));
-  state.index=0;state.score=0;state.answered=false;
-  show("quiz");renderQuestion();
-}
-function renderQuestion(){
-  const q=state.questions[state.index];
-  $("#questionNumber").textContent=String(state.index+1).padStart(2,"0");
-  $("#progressText").textContent=`${String(state.index+1).padStart(2,"0")} / ${String(state.questions.length).padStart(2,"0")}`;
-  $("#progressBar").style.width=`${state.index/state.questions.length*100}%`;
-  $("#questionCategory").textContent=state.category.name.toUpperCase();
-  $("#question").textContent=q[0];
-  $("#feedback").textContent="";
-  $("#quizXp").textContent=`${state.score} XP`;
-  const answers=$("#answers");answers.innerHTML="";
-  q[1].forEach((a,i)=>{
-    const b=document.createElement("button");b.className="answer";b.textContent=`${String.fromCharCode(65+i)}  ${a}`;
-    b.onclick=()=>answer(i,b);answers.appendChild(b);
-  });
-}
-function answer(i,clicked){
-  if(state.answered)return;
-  state.answered=true;
-  const q=state.questions[state.index];
-  [...$("#answers").children].forEach((b,n)=>{b.disabled=true;if(n===q[2])b.classList.add("correct")});
-  if(i===q[2]){state.score+=250;clicked.classList.add("correct");$("#feedback").textContent="CORRECT · +250 XP";$("#feedback").style.color="#8bd3a8"}
-  else {clicked.classList.add("wrong");$("#feedback").textContent=`INCORRECT · CORRECT ANSWER: ${q[1][q[2]]}`;$("#feedback").style.color="#dc8d8d"}
-  $("#quizXp").textContent=`${state.score} XP`;
-  $("#progressBar").style.width=`${(state.index+1)/state.questions.length*100}%`;
-  setTimeout(()=>{
-    state.index++;
-    if(state.index>=state.questions.length)finishQuiz();else{state.answered=false;renderQuestion()}
-  },900);
-}
-function finishQuiz(){
-  state.totalXP+=state.score;
-  $("#finalScore").textContent=state.score;
-  $("#leaderScore").textContent=`${state.totalXP} XP`;
-  $("#scoreNav").textContent=`${state.totalXP} XP`;
-  const pct=Math.round(state.score/(state.questions.length*250)*100);
-  $("#resultTitle").textContent=pct>=80?"Pilot-grade knowledge.":pct>=50?"Solid cruising altitude.":"Time to refuel your curiosity.";
-  $("#resultText").textContent=`You scored ${pct}% on the ${state.category.name} flight. Your route is now logged in the cabin.`;
-  show("results");
-}
-$("#startBtn").onclick=()=>show("categories");
-$("#retryBtn").onclick=()=>startQuiz(state.category.id);
-$("#quitQuiz").onclick=()=>show("categories");
-$("#soundBtn").onclick=()=>toast("Sound controls are ready for the next audio layer.");
 
-renderCategories();
-
-SkyScene.init(document.querySelector("#gl"),{
-  reduced:false,
-  onTelemetry(s){
-    $("#speed").textContent=Math.round(s.kts);
-    $("#alt").textContent=Math.round(s.altFt);
-    const t=Math.floor(s.T);$("#clock").textContent=`${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
+  if (window.SkyScene) {
+    SkyScene.setMode(name === "quiz" ? "quiz" : "hero");
   }
+}
+
+
+document.querySelectorAll("[data-screen]").forEach(b => {
+  b.addEventListener("click", () => {
+    const screen = b.dataset.screen;
+
+    show(screen);
+
+    if (screen === "leaderboard") {
+      loadLeaderboard();
+    }
+  });
 });
+
+
+/* ───────── shuffle ───────── */
+
+function shuffle(a) {
+  const r = [...a];
+
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+
+  return r;
+}
+
+
+/* ───────── toast ───────── */
+
+function toast(msg) {
+  const t = $("#toast");
+
+  if (!t) return;
+
+  t.textContent = msg;
+  t.classList.add("show");
+
+  setTimeout(() => {
+    t.classList.remove("show");
+  }, 1700);
+}
+
+
+/* ───────── player name ───────── */
+
+function getPlayerName() {
+  const previousName =
+    player.name ||
+    localStorage.getItem("altitudePlayerName") ||
+    "";
+
+  const input = window.prompt(
+    previousName
+      ? `ENTER YOUR PILOT NAME:\n\nCurrent: ${previousName}`
+      : "ENTER YOUR PILOT NAME:"
+  );
+
+  if (input === null) {
+    return null;
+  }
+
+  const name = input.trim().replace(/\s+/g, " ");
+
+  if (!name) {
+    toast("Please enter a pilot name.");
+    return getPlayerName();
+  }
+
+  if (name.length > 20) {
+    toast("Name must be 20 characters or less.");
+    return getPlayerName();
+  }
+
+  player.name = name;
+
+  localStorage.setItem(
+    "altitudePlayerName",
+    name
+  );
+
+  return name;
+}
+
+
+/* ───────── Supabase: submit score ───────── */
+
+async function submitScore() {
+  const name = player.name || "Anonymous Pilot";
+
+  const correctAnswers = Math.round(
+    state.score / XP_PER_CORRECT
+  );
+
+  const payload = {
+    player_name: name,
+    score: state.score,
+    category: TOPIC,
+    correct_answers: correctAnswers,
+    total_questions: QUESTION_COUNT
+  };
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/leaderboard`,
+      {
+        method: "POST",
+
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      console.error(
+        "[ALTITUDE] Supabase score submission failed:",
+        errorText
+      );
+
+      toast("Score could not be submitted.");
+
+      return false;
+    }
+
+    console.log(
+      "[ALTITUDE] Score submitted successfully."
+    );
+
+    return true;
+
+  } catch (error) {
+    console.error(
+      "[ALTITUDE] Supabase connection error:",
+      error
+    );
+
+    toast("Leaderboard connection unavailable.");
+
+    return false;
+  }
+}
+
+
+/* ───────── Supabase: load leaderboard ───────── */
+
+async function loadLeaderboard() {
+  const list = $("#leaderboardList");
+
+  if (!list) {
+    console.warn(
+      "[ALTITUDE] #leaderboardList was not found."
+    );
+
+    return;
+  }
+
+  list.innerHTML = `
+    <div class="leaderboard-loading">
+      LOADING GLOBAL CABIN...
+    </div>
+  `;
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/leaderboard` +
+      `?select=player_name,score,category,correct_answers,total_questions,created_at` +
+      `&order=score.desc,created_at.asc` +
+      `&limit=50`,
+      {
+        method: "GET",
+
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+
+      throw new Error(errorText);
+    }
+
+    leaderboardEntries = await response.json();
+
+    renderLeaderboard();
+
+  } catch (error) {
+    console.error(
+      "[ALTITUDE] Could not load leaderboard:",
+      error
+    );
+
+    list.innerHTML = `
+      <div class="leaderboard-loading">
+        UNABLE TO LOAD GLOBAL CABIN
+      </div>
+    `;
+  }
+}
+
+
+/* ───────── leaderboard rendering ───────── */
+
+function renderLeaderboard() {
+  const list = $("#leaderboardList");
+
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (!leaderboardEntries.length) {
+    list.innerHTML = `
+      <div class="leaderboard-loading">
+        NO FLIGHTS RECORDED YET
+      </div>
+    `;
+
+    return;
+  }
+
+  leaderboardEntries.forEach((entry, index) => {
+    const row = document.createElement("div");
+
+    const isYou =
+      player.name &&
+      entry.player_name.toLowerCase() ===
+      player.name.toLowerCase();
+
+    row.className = isYou ? "you" : "";
+
+    row.innerHTML = `
+      <span>${String(index + 1).padStart(2, "0")}</span>
+      <b>${escapeHTML(entry.player_name)}</b>
+      <strong>${entry.score} XP</strong>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+
+/* ───────── prevent HTML injection ───────── */
+
+function escapeHTML(value) {
+  const div = document.createElement("div");
+
+  div.textContent = value;
+
+  return div.innerHTML;
+}
+
+
+/* ───────── timer ───────── */
+
+function stopTimer() {
+  if (timerId) {
+    clearInterval(timerId);
+    timerId = null;
+  }
+}
+
+
+function startTimer(run) {
+  stopTimer();
+
+  const deadline =
+    Date.now() + TIME_LIMIT * 1000;
+
+  const bar = $("#timerBar");
+  const label = $("#timer");
+
+  const paint = () => {
+    const left = Math.max(
+      0,
+      deadline - Date.now()
+    );
+
+    const secs = Math.ceil(
+      left / 1000
+    );
+
+    if (label) {
+      label.textContent = `⏱ ${secs}s`;
+    }
+
+    if (bar) {
+      bar.style.transform =
+        `scaleX(${left / (TIME_LIMIT * 1000)})`;
+
+      const urgent = secs <= 10;
+
+      bar.style.background =
+        urgent ? "#dc8d8d" : "#e2b26a";
+    }
+
+    if (label) {
+      const urgent = secs <= 10;
+
+      label.style.color =
+        urgent ? "#dc8d8d" : "";
+    }
+
+    if (
+      left <= 0 &&
+      run === state.run
+    ) {
+      stopTimer();
+      timeUp();
+    }
+  };
+
+  paint();
+
+  timerId = setInterval(
+    paint,
+    200
+  );
+}
+
+
+/* ───────── quiz flow ───────── */
+
+function startQuiz() {
+  const name = getPlayerName();
+
+  if (!name) {
+    return;
+  }
+
+  state.run++;
+
+  state.questions = shuffle(POOL)
+    .slice(0, QUESTION_COUNT)
+    .map(([q, opts, correct]) => {
+
+      const answer = opts[correct];
+
+      const options = shuffle(opts);
+
+      return {
+        q,
+        options,
+        correct: options.indexOf(answer)
+      };
+    });
+
+  state.index = 0;
+  state.score = 0;
+  state.answered = false;
+
+  show("quiz");
+
+  renderQuestion();
+}
+
+
+function renderQuestion() {
+  const q = state.questions[state.index];
+
+  const n = state.questions.length;
+
+  $("#questionNumber").textContent =
+    String(state.index + 1).padStart(2, "0");
+
+  $("#progressText").textContent =
+    `${String(state.index + 1).padStart(2, "0")} / ${String(n).padStart(2, "0")}`;
+
+  $("#progressBar").style.transform =
+    `scaleX(${state.index / n})`;
+
+  $("#questionCategory").textContent =
+    TOPIC.toUpperCase();
+
+  $("#question").textContent =
+    q.q;
+
+  $("#feedback").textContent = "";
+
+  $("#quizXp").textContent =
+    `${state.score} XP`;
+
+  const answers = $("#answers");
+
+  answers.innerHTML = "";
+
+  q.options.forEach((a, i) => {
+
+    const b =
+      document.createElement("button");
+
+    b.className = "answer";
+
+    b.textContent =
+      `${String.fromCharCode(65 + i)}  ${a}`;
+
+    b.onclick = () =>
+      answer(i, b);
+
+    answers.appendChild(b);
+  });
+
+  startTimer(state.run);
+}
+
+
+function next(run) {
+  if (run !== state.run) {
+    return;
+  }
+
+  state.index++;
+
+  if (
+    state.index >=
+    state.questions.length
+  ) {
+    finishQuiz();
+  } else {
+    state.answered = false;
+
+    renderQuestion();
+  }
+}
+
+
+function lockAnswers(q) {
+  [...$("#answers").children]
+    .forEach((b, n) => {
+
+      b.disabled = true;
+
+      if (n === q.correct) {
+        b.classList.add("correct");
+      }
+    });
+
+  $("#progressBar").style.transform =
+    `scaleX(${(state.index + 1) / state.questions.length})`;
+}
+
+
+/* ───────── answer ───────── */
+
+function answer(i, clicked) {
+  if (state.answered) {
+    return;
+  }
+
+  state.answered = true;
+
+  stopTimer();
+
+  const q =
+    state.questions[state.index];
+
+  const run = state.run;
+
+  lockAnswers(q);
+
+  if (i === q.correct) {
+
+    state.score += XP_PER_CORRECT;
+
+    clicked.classList.add("correct");
+
+    $("#feedback").textContent =
+      `CORRECT · +${XP_PER_CORRECT} XP`;
+
+    $("#feedback").style.color =
+      "#8bd3a8";
+
+  } else {
+
+    clicked.classList.add("wrong");
+
+    $("#feedback").textContent =
+      `INCORRECT · CORRECT ANSWER: ${q.options[q.correct]}`;
+
+    $("#feedback").style.color =
+      "#dc8d8d";
+  }
+
+  $("#quizXp").textContent =
+    `${state.score} XP`;
+
+  setTimeout(
+    () => next(run),
+    700
+  );
+}
+
+
+/* ───────── time up ───────── */
+
+function timeUp() {
+  if (state.answered) {
+    return;
+  }
+
+  state.answered = true;
+
+  const q =
+    state.questions[state.index];
+
+  const run = state.run;
+
+  lockAnswers(q);
+
+  $("#feedback").textContent =
+    `TIME'S UP · CORRECT ANSWER: ${q.options[q.correct]}`;
+
+  $("#feedback").style.color =
+    "#dc8d8d";
+
+  setTimeout(
+    () => next(run),
+    1100
+  );
+}
+
+
+/* ───────── finish quiz ───────── */
+
+async function finishQuiz() {
+  stopTimer();
+
+  state.totalXP += state.score;
+
+  const n =
+    state.questions.length;
+
+  const correct =
+    Math.round(state.score / XP_PER_CORRECT);
+
+  const pct =
+    Math.round(
+      state.score /
+      (n * XP_PER_CORRECT) *
+      100
+    );
+
+  // Update the results screen first.
+  // Supabase must never prevent the results from appearing.
+  $("#finalScore").textContent =
+    state.score;
+
+  $("#scoreNav").textContent =
+    `${state.totalXP} XP`;
+
+  $("#resultTitle").textContent =
+    pct >= 80
+      ? "Captain-grade knowledge."
+      : pct >= 40
+        ? "Smooth cruising altitude."
+        : "Turbulence ahead. Try again?";
+
+  $("#resultText").textContent =
+    `${player.name}, you got ${correct} of ${n} right on the ${TOPIC} flight.`;
+
+  // Show the results immediately.
+  show("results");
+
+  // Submit the score after the results are visible.
+  // A Supabase failure must not break the quiz.
+  try {
+    const submitted = await submitScore();
+
+    if (!submitted) {
+      console.warn(
+        "[ALTITUDE] Results displayed, but the score was not submitted."
+      );
+    }
+  } catch (error) {
+    console.error(
+      "[ALTITUDE] Score submission failed:",
+      error
+    );
+
+    toast("Results saved · leaderboard unavailable");
+  }
+}
+
+
+/* ───────── buttons ───────── */
+
+$("#startBtn").onclick =
+  startQuiz;
+
+$("#retryBtn").onclick =
+  startQuiz;
+
+$("#quitQuiz").onclick = () => {
+
+  state.run++;
+
+  show("home");
+};
+
+
+/* ───────── Three.js scene ───────── */
+
+SkyScene.init(
+  document.querySelector("#gl"),
+  {
+    reduced: false,
+
+    onTelemetry(s) {
+
+      $("#speed").textContent =
+        Math.round(s.kts);
+
+      $("#alt").textContent =
+        Math.round(s.altFt);
+
+      const t =
+        Math.floor(s.T);
+
+      $("#clock").textContent =
+        `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`;
+    }
+  }
+);
+
 SkyScene.start();
-SkyScene.onIntroEnd(()=>toast("Takeoff complete · choose your trivia destination"));
+
+SkyScene.onIntroEnd(() =>
+  toast(
+    "Takeoff complete · ready when you are"
+  )
+);
